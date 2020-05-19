@@ -2,6 +2,7 @@ from model import VQVAE
 from Encoder.encoder import *
 from Decoder.decoder import *
 from dataset import *
+from testset import *
 from utils import display_time, suppress_tf_warning
 import tensorflow as tf
 import time, os, sys, json
@@ -37,17 +38,14 @@ parser.add_argument('-params', default='model_parameters.json',
 args = parser.parse_args()
 
 dataset_args = {
-    'relative_path': 'data/',
+    'relative_path': '../data/',
     'batch_size': args.batch_size,
     'max_len': args.max_len
 }
 
 if args.dataset == 'VCTK':
     dataset = VCTK(**dataset_args)
-elif args.dataset == 'LibriSpeech':
-    dataset = LibriSpeech(**dataset_args)
-elif args.dataset == 'Aishell':
-    dataset = Aishell(**dataset_args)
+    testset = VCTK_test(**dataset_args)
 else:
     raise NotImplementedError('dataset %s not implemented' % args.dataset)
 
@@ -97,6 +95,7 @@ if not os.path.isdir(save_dir):
 writer = tf.summary.FileWriter(save_dir, sess.graph)
 
 sess.run(dataset.init)
+sess.run(testset.init)
 for step in range(1, 1 + args.num_steps): 
     try:
         t = time.time()
