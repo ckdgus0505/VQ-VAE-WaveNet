@@ -38,7 +38,7 @@ parser.add_argument('-params', default='model_parameters.json',
 args = parser.parse_args()
 
 dataset_args = {
-    'relative_path': '../data/',
+    'relative_path': '/home/ckdgus0505/speech001/data/',
     'batch_size': args.batch_size,
     'max_len': args.max_len
 }
@@ -60,6 +60,8 @@ decoder = WavenetDecoder(parameters['wavenet_parameters'])
 model_args = {
     'x': dataset.x,
     'speaker': dataset.y,
+    'test_x': testset.x,
+    'test_speaker': testset.y,
     'encoder': encoder,
     'decoder': decoder,
     'k': parameters['k'],
@@ -96,28 +98,34 @@ writer = tf.summary.FileWriter(save_dir, sess.graph)
 
 sess.run(dataset.init)
 sess.run(testset.init)
-for step in range(1, 1 + args.num_steps): 
-    try:
-        t = time.time()
-        if (gs + 1) % args.interval == 0:
-            _, rl, gs, lr, summary = sess.run([model.train_op, 
-                                               model.reconstruction_loss, 
-                                               model.global_step, 
-                                               model.lr,
-                                               model.summary])
-            writer.add_summary(summary, gs)
-        else:
+#for epoch in range (1,int((1+args.num_steps)/dataset.total)):
+for epoch in range (1,100):
+    for step in range(1, 10):
+    #for step in range(1, int(1 + args.num_steps/epoch)): 
+        try:
+            t = time.time()
             _, rl, gs, lr = sess.run([model.train_op, 
                                                model.reconstruction_loss, 
                                                model.global_step, 
                                                model.lr])
-        t = time.time() - t
-        progress = '\r[step %d] %.2f' % (gs, step / args.num_steps * 100) + '%'
-        loss = ' [recons %.5f] [lr %.5f]' % (rl, lr)
-        second = (args.num_steps - step) * t
-        print(progress + loss + display_time(t, second), end='')
-    except tf.errors.OutOfRangeError:
-        print('\ndataset re-initialised')
-        sess.run(dataset.init)
+            t = time.time() - t
+            progress = '\r[step %d] %.2f' % (gs, step / args.num_steps * 100) + '%'
+            loss = ' [recons %.5f] [lr %.8f]' % (rl, lr)
+            second = (args.num_steps - step) * t
+            print(progress + loss + display_time(t, second), end='')
+        except tf.errors.OutOfRangeError:
+            print('\ndataset re-initialised')
+            sess.run(dataset.init)
+            sess.run(testset.init)
+    t = time.time()
+    summary, test_loss = sess.run([model.summary,
+                          model.test_loss])
+    writer.add_summary(summary, epoch)
+            
+    t = time.time() - t
+    progress = '\r[step %d] %.2f' % (gs, step / args.num_steps * 100) + '%'
+    loss = ' [recons %.5f] [lr %.8f]' % (rl, lr)
+    second = (args.num_steps - step) * t
+    print(progress + loss + display_time(t, second), end='')
+    
 saver.save(sess, save_path, global_step=model.global_step)
-

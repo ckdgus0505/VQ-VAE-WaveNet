@@ -1,12 +1,13 @@
 import tensorflow as tf
 
-
 class VQVAE(object):
 
 
     def __init__(self, args):
         self.x = args['x']
         self.h = args['speaker']
+        self.test_x = args['test_x']
+        self.test_h = args['test_speaker']
         self.encoder = args['encoder']
         self.decoder = args['decoder']
         self.k = args['k']
@@ -87,6 +88,43 @@ class VQVAE(object):
                                                      global_condition=self.h)
 
 
+    def _compute_test_loss(self):
+        tf.get_variable_scope().reuse == True
+        test_z_e = self.encoder.build(self.test_x)
+
+        expanded_ze = tf.expand_dims(test_z_e, -2)
+
+        distances = tf.reduce_sum((expanded_ze - self.embedding) ** 2, axis=-1)
+
+        test_q_z_x = tf.argmin(distances, axis = -1)
+
+        test_e_k = tf.nn.embedding_lookup(self.embedding, test_q_z_x)
+
+        test_z_q = test_z_e + tf.stop_gradient(self.e_k - test_z_e)
+
+        test_x_z_q, test_labels = self.decoder.build(x=self.test_x,
+                                     local_condition=test_z_q,
+                                     global_condition=self.test_h)
+
+        self.test_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
+                     labels=test_labels,
+                     logits=test_x_z_q)
+        test_reconstruction_loss = tf.reduce_mean(self.test_loss, axis=0)
+
+        self.test_loss = test_reconstruction_loss
+#        tf.summary.scalar('test_reconstruction_loss', test_reconstruction_loss)
+
+        if self.use_vq:
+            test_vq_loss = tf.reduce_mean((tf.stop_gradient(test_z_e) - test_e_k) ** 2)
+
+            test_commitment_loss = self.beta * tf.reduce_mean((test_z_e - tf.stop_gradient(test_e_k)) ** 2)
+
+            self.test_loss += test_vq_loss + test_commitment_loss
+
+        tf.summary.scalar('test_loss', self.test_loss)
+
+        return self.test_loss
+
     def _compute_loss(self):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
                      labels=self.labels,
@@ -104,6 +142,7 @@ class VQVAE(object):
             tf.summary.scalar('commitment_loss', self.commitment_loss)
 
             self.loss += self.vq_loss + self.commitment_loss
+            tf.summary.scalar('training_loss', self.loss)
 
 
     def _build_optimiser(self, learning_rate_schedule):
@@ -148,6 +187,7 @@ class VQVAE(object):
             self._build_decoder()
         with tf.variable_scope('optimiser'):
             self._compute_loss()
+            self._compute_test_loss()
             self._build_optimiser(learning_rate_schedule)
 
 
