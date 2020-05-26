@@ -38,7 +38,7 @@ parser.add_argument('-params', default='model_parameters.json',
 args = parser.parse_args()
 
 dataset_args = {
-    'relative_path': '/home/ckdgus0505/speech001/data/',
+    'relative_path': '../data/',
     'batch_size': args.batch_size,
     'max_len': args.max_len
 }
