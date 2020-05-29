@@ -1,7 +1,9 @@
 day= `date +%m_%d`
 
+make all: clean train 
+
 train:
-	python3 train.py -dataset VCTK -length 6656 -batch 6 -step 10000 -save $(day)/weights -restore saved_weight/weights-1
+	python3 train.py -dataset VCTK -length 6656 -batch 6 -epoch 100 -save $(day)/weights -restore saved_weight/weights-1
 
 board:
 	tensorboard --logdir=./$(day)

@@ -3,3 +3,4 @@ saved_weight
 __pycache__/model.cpython-36.pyc
 *.pyc
 ??_??/*
+*.swp

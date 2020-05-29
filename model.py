@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 class VQVAE(object):
 
@@ -14,6 +15,8 @@ class VQVAE(object):
         self.beta = args['beta']
         self.use_vq = args['use_vq']
         self.num_speakers = args['num_speakers']
+        self.dataset_size = args['dataset_size']
+        self.testset_size = args['testset_size']
         self._print = lambda s, t: print(s, t.shape) if args['verbose'] else None
 
         self._print('input x:', self.x)
@@ -121,9 +124,7 @@ class VQVAE(object):
 
             self.test_loss += test_vq_loss + test_commitment_loss
 
-        tf.summary.scalar('test_loss', self.test_loss)
-
-        return self.test_loss
+#        tf.summary.scalar('test_loss', self.test_loss)
 
     def _compute_loss(self):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -143,7 +144,6 @@ class VQVAE(object):
 
             self.loss += self.vq_loss + self.commitment_loss
             tf.summary.scalar('training_loss', self.loss)
-
 
     def _build_optimiser(self, learning_rate_schedule):
         self.global_step = tf.Variable(tf.constant(0, dtype=tf.int32), trainable=False)
@@ -188,6 +188,7 @@ class VQVAE(object):
         with tf.variable_scope('optimiser'):
             self._compute_loss()
             self._compute_test_loss()
+#            self.make_test_graph()
             self._build_optimiser(learning_rate_schedule)
 
 

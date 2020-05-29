@@ -113,17 +113,6 @@ class Dataset():
         return data, len(data), speakers
 
 
-class LibriSpeech(Dataset):
-    def __init__(self, batch_size=1, max_len=5120, sr=16000, relative_path=''):
-        super(LibriSpeech, self).__init__()
-
-        self.filename = 'librispeech_train_clean_100.txt'
-        self.speaker_file = 'librispeech_speakers.txt'
-        self.data_dir = ''
-        self.split_func = lambda s: s.split('/')[-1].split('-', 1)[0]
-        self.make_iterator(relative_path, max_len, sr, batch_size)
-
-
 class VCTK(Dataset):
     def __init__(self, batch_size=1, max_len=5120, sr=48000, relative_path=''):
         super(VCTK, self).__init__()
@@ -133,15 +122,3 @@ class VCTK(Dataset):
         self.data_dir = 'VCTK-Corpus/wav48/'
         self.split_func = lambda s: s.split('/')[0]
         self.make_iterator(relative_path, max_len, sr, batch_size)
-
-
-class Aishell(Dataset):
-    def __init__(self, batch_size=1, max_len=5120, sr=16000, relative_path=''):
-        super(Aishell, self).__init__()
-
-        self.filename = 'aishell_train1.txt'
-        self.speaker_file = 'aishell_speakers.txt'
-        self.data_dir = ''
-        self.split_func = lambda s: s.split('/train/')[1].split('/')[0]
-        self.make_iterator(relative_path, max_len, sr, batch_size)
-

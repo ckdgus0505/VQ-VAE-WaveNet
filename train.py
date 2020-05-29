@@ -7,6 +7,7 @@ from utils import display_time, suppress_tf_warning
 import tensorflow as tf
 import time, os, sys, json
 from argparse import ArgumentParser
+import matplotlib.pyplot as plt
 
 suppress_tf_warning()
 
@@ -17,7 +18,7 @@ parser.add_argument('-dataset', default='VCTK', type=str,
 parser.add_argument('-length', default=6656, type=int,
                     dest='max_len', metavar='int',
                     help='number of samples one audio will contain')
-parser.add_argument('-step', default=1000000, type=int,
+parser.add_argument('-epoch', default=23, type=int,
                     dest='num_steps', metavar='int',
                     help='number of steps to train')
 parser.add_argument('-batch', default=8, type=int,
@@ -69,7 +70,9 @@ model_args = {
     'verbose': parameters['verbose'],
     'use_vq': parameters['use_vq'],
     'speaker_embedding': parameters['speaker_embedding'],
-    'num_speakers': dataset.num_speakers
+    'num_speakers': dataset.num_speakers,
+    'dataset_size': dataset.total,
+    'testset_size': testset.total
 }
 
 schedule = {int(k): v for k, v in parameters['learning_rate_schedule'].items()}
@@ -98,10 +101,13 @@ writer = tf.summary.FileWriter(save_dir, sess.graph)
 
 sess.run(dataset.init)
 sess.run(testset.init)
-#for epoch in range (1,int((1+args.num_steps)/dataset.total)):
-for epoch in range (1,100):
-    for step in range(1, 10):
-    #for step in range(1, int(1 + args.num_steps/epoch)): 
+xaxis = []
+yaxis = []
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.title("test loss")
+for epoch in range (1,args.num_steps):
+    for step in range(1, dataset.total):
         try:
             t = time.time()
             _, rl, gs, lr = sess.run([model.train_op, 
@@ -118,14 +124,22 @@ for epoch in range (1,100):
             sess.run(dataset.init)
             sess.run(testset.init)
     t = time.time()
-    summary, test_loss = sess.run([model.summary,
-                          model.test_loss])
+
+    val = 0.0
+    for i in range (0, testset.total):
+        val += sess.run(model.test_loss)
+    yaxis.append(val/testset.total)
+    xaxis.append(epoch)
+    plt.plot(xaxis, yaxis, linewidth = 2)
+    plt.savefig(save_dir+'/'+str(epoch)+'.png', dpi=300)
+    summary = sess.run(model.summary)
+    
     writer.add_summary(summary, epoch)
             
     t = time.time() - t
     progress = '\r[step %d] %.2f' % (gs, step / args.num_steps * 100) + '%'
     loss = ' [recons %.5f] [lr %.8f]' % (rl, lr)
-    second = (args.num_steps - step) * t
+    second = (args.num_steps * dataset.total - step) * t
     print(progress + loss + display_time(t, second), end='')
     
 saver.save(sess, save_path, global_step=model.global_step)
