@@ -52,16 +52,17 @@ class Dataset():
         # otherwise you should modify the corresponding receptive field
         def gen_sr():
             while True:
-                i = np.random.choice(indices)
-                filename = self.all_files[i]
-                wav, _ = librosa.load(data_dir + filename, sr=16000)
-                start = np.random.randint(low=0, 
-                                          high=len(wav) - max_len)
-                wav = wav[start: start + max_len]
-                wav = np.reshape(wav, [max_len, 1])
-                speaker = self.split_func(filename)
-                speaker_id = np.reshape(self.speaker_to_int[speaker], [1])
-                yield wav, speaker_id
+                for i in indices:
+                    filename = self.all_files[i]
+                    wav, _ = librosa.load(data_dir + filename, sr=16000)
+ #               start = np.random.randint(low=0, 
+ #                                         high=len(wav) - max_len)
+                    start = 8126
+                    wav = wav[start: start + max_len]
+                    wav = np.reshape(wav, [max_len, 1])
+                    speaker = self.split_func(filename)
+                    speaker_id = np.reshape(self.speaker_to_int[speaker], [1])
+                    yield wav, speaker_id
         return gen if sr == 16000 else gen_sr
 
     def make_iterator(self, relative_path, max_len, sr, batch_size):

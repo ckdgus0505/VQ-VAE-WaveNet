@@ -18,7 +18,7 @@ class Dataset():
     def read_files(self, filename):
         with open(filename) as file:
             files = file.readlines()
-        np.random.shuffle(files)
+#        np.random.shuffle(files)
         return [f.strip() for f in files]
 
     def trim_silence(self, audio, threshold=0.01, frame_length=2048):
@@ -52,16 +52,18 @@ class Dataset():
         # otherwise you should modify the corresponding receptive field
         def gen_sr():
             while True:
-                i = np.random.choice(indices)
-                filename = self.all_files[i]
-                wav, _ = librosa.load(data_dir + filename, sr=16000)
-                start = np.random.randint(low=0, 
+                for i in indices:
+                    filename = self.all_files[i]
+                    wav, _ = librosa.load(data_dir + filename, sr=16000)
+                    np.random.seed(i + np.random.randint(1))
+                    start = np.random.randint(low=0, 
                                           high=len(wav) - max_len)
-                wav = wav[start: start + max_len]
-                wav = np.reshape(wav, [max_len, 1])
-                speaker = self.split_func(filename)
-                speaker_id = np.reshape(self.speaker_to_int[speaker], [1])
-                yield wav, speaker_id
+                    print(start)
+                    wav = wav[start: start + max_len]
+                    wav = np.reshape(wav, [max_len, 1])
+                    speaker = self.split_func(filename)
+                    speaker_id = np.reshape(self.speaker_to_int[speaker], [1])
+                    yield wav, speaker_id
         return gen if sr == 16000 else gen_sr
 
     def make_iterator(self, relative_path, max_len, sr, batch_size):
@@ -84,34 +86,6 @@ class Dataset():
         self.init = iterator.initializer
         self.x, y = iterator.get_next()
         self.y = tf.one_hot(y, depth=self.num_speakers, dtype=tf.float32)
-
-    # deprecated
-    def _load(self, max_len, abs_name=''):
-        data = np.zeros([len(self.all_files), max_len, 1], dtype=np.float32)
-        speakers = np.zeros([len(self.all_files)], dtype=np.float32)
-
-        for n, file in tqdm(enumerate(self.all_files)):
-            sr, wav = wavfile.read(abs_name + file)
-            wav = np.asarray(wav, dtype=np.float32)
-            if len(np.shape(wav)) > 1:
-                wav = (wav[:, 0] + wav[:, 1]) / 2
-            wav = (wav + 0.5) / 32767.5
-            wav = self.trim_silence(wav)
-            if len(wav) < max_len:
-                continue
-            wav = np.expand_dims(wav, -1)
-
-            speaker = self.split_func(file)
-            speaker_id = self.speaker_to_int[speaker]
-
-            i = np.random.randint(0, len(wav) - max_len + 1)
-            data[n] = wav[i: i + max_len]
-            speakers[n] = speaker_id
-
-        speakers = np.reshape(speakers, [-1, 1])
-        print('data total:', len(data))
-        return data, len(data), speakers
-
 
 class VCTK(Dataset):
     def __init__(self, batch_size=1, max_len=5120, sr=48000, relative_path=''):

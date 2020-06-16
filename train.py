@@ -5,9 +5,13 @@ from dataset import *
 from testset import *
 from utils import display_time, suppress_tf_warning
 import tensorflow as tf
+import numpy as np
 import time, os, sys, json
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
+
+np.random.seed(1)
+tf.set_random_seed(1)
 
 suppress_tf_warning()
 
@@ -102,18 +106,37 @@ writer = tf.summary.FileWriter(save_dir, sess.graph)
 sess.run(dataset.init)
 sess.run(testset.init)
 xaxis = []
-yaxis = []
+laxis = []
+rclaxis = []
+cmlaxis = []
+vqlaxis = []
+tlaxis = []
+trclaxis = []
+tcmlaxis = []
+tvqlaxis = []
 plt.xlabel("epoch")
 plt.ylabel("loss")
-plt.title("test loss")
+plt.figure(figsize=(15,20))
 for epoch in range (1,args.num_steps):
-    for step in range(1, dataset.total):
+    mp1 = 0.0
+    mp2 = 0.0
+    mp3 = 0.0
+    mp4 = 0.0
+    for step in range(1, 2):
+#    for step in range(1, dataset.total):
         try:
             t = time.time()
-            _, rl, gs, lr = sess.run([model.train_op, 
+            _, rl, gs, lr, cml, vql, l = sess.run([model.train_op, 
                                                model.reconstruction_loss, 
                                                model.global_step, 
-                                               model.lr])
+                                               model.lr,
+                                               model.commitment_loss,
+                                               model.vq_loss,
+                                               model.loss])
+            mp1 += l
+            mp2 += rl
+            mp3 += cml
+            mp4 += vql
             t = time.time() - t
             progress = '\r[step %d] %.2f' % (gs, step / args.num_steps * 100) + '%'
             loss = ' [recons %.5f] [lr %.8f]' % (rl, lr)
@@ -124,14 +147,75 @@ for epoch in range (1,args.num_steps):
             sess.run(dataset.init)
             sess.run(testset.init)
     t = time.time()
+    laxis.append(mp1/dataset.total)
+    rclaxis.append(mp2/dataset.total)
+    cmlaxis.append(mp3/dataset.total)
+    vqlaxis.append(mp4/dataset.total)
 
-    val = 0.0
-    for i in range (0, testset.total):
-        val += sess.run(model.test_loss)
-    yaxis.append(val/testset.total)
+    tl = 0.0
+    trcl = 0.0
+    tcml = 0.0
+    tvql = 0.0
+    tmp1 = 0.0
+    tmp2 = 0.0
+    tmp3 = 0.0
+    tmp4 = 0.0
+    for i in range (0, 2):
+#    for i in range (0, testset.total):
+        tmp1, tmp2, tmp3, tmp4 = sess.run([model.test_loss, model.test_reconstruction_loss, model.test_commitment_loss, model.test_vq_loss])
+        tl += tmp1
+        trcl += tmp2
+        tcml += tmp3
+        tvql += tmp4
+    
+    tlaxis.append(tl/testset.total)
+    trclaxis.append(trcl/testset.total)
+    tcmlaxis.append(tcml/testset.total)
+    tvqlaxis.append(tvql/testset.total)
     xaxis.append(epoch)
-    plt.plot(xaxis, yaxis, linewidth = 2)
-    plt.savefig(save_dir+'/'+str(epoch)+'.png', dpi=300)
+    plt.subplot(421)
+    plt.title("loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, laxis)
+    plt.subplot(422)
+    plt.title("reconstruction_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, rclaxis)
+    plt.subplot(423)
+    plt.title("commitment_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, cmlaxis)
+    plt.subplot(424)
+    plt.title("vq_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, vqlaxis)
+
+    plt.subplot(425)
+    plt.title("test_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, tlaxis)
+    plt.subplot(426)
+    plt.title("test_reconstruction_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, trclaxis)
+    plt.subplot(427)
+    plt.title("test_commitment_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, tcmlaxis)
+    plt.subplot(428)
+    plt.title("test_vq_loss")
+    plt.xlabel("epoch")
+    plt.ylabel("loss")
+    plt.plot(xaxis, tvqlaxis)
+
+    plt.savefig(save_dir+'/'+str(epoch)+'.png', dpi=400)
     summary = sess.run(model.summary)
     
     writer.add_summary(summary, epoch)

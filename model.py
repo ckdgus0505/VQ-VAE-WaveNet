@@ -112,17 +112,17 @@ class VQVAE(object):
         self.test_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
                      labels=test_labels,
                      logits=test_x_z_q)
-        test_reconstruction_loss = tf.reduce_mean(self.test_loss, axis=0)
+        self.test_reconstruction_loss = tf.reduce_mean(self.test_loss, axis=0)
 
-        self.test_loss = test_reconstruction_loss
+        self.test_loss = self.test_reconstruction_loss
 #        tf.summary.scalar('test_reconstruction_loss', test_reconstruction_loss)
 
         if self.use_vq:
-            test_vq_loss = tf.reduce_mean((tf.stop_gradient(test_z_e) - test_e_k) ** 2)
+            self.test_vq_loss = tf.reduce_mean((tf.stop_gradient(test_z_e) - test_e_k) ** 2)
 
-            test_commitment_loss = self.beta * tf.reduce_mean((test_z_e - tf.stop_gradient(test_e_k)) ** 2)
+            self.test_commitment_loss = self.beta * tf.reduce_mean((test_z_e - tf.stop_gradient(test_e_k)) ** 2)
 
-            self.test_loss += test_vq_loss + test_commitment_loss
+            self.test_loss += self.test_vq_loss + self.test_commitment_loss
 
 #        tf.summary.scalar('test_loss', self.test_loss)
 
