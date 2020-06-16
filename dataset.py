@@ -52,13 +52,14 @@ class Dataset():
         # otherwise you should modify the corresponding receptive field
         def gen_sr():
             while True:
+                np.random.shuffle(indices)
                 for i in indices:
+                    print(i)
                     filename = self.all_files[i]
                     wav, _ = librosa.load(data_dir + filename, sr=16000)
                     np.random.seed(i + np.random.randint(1))
                     start = np.random.randint(low=0, 
                                           high=len(wav) - max_len)
-                    print(start)
                     wav = wav[start: start + max_len]
                     wav = np.reshape(wav, [max_len, 1])
                     speaker = self.split_func(filename)

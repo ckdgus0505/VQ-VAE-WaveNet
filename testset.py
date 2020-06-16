@@ -41,6 +41,7 @@ class Dataset():
                     filename = self.all_files[i]
                     _, wav = wavfile.read(data_dir + filename)
                     wav = (wav + 0.5) / 32767.5
+                    np.random.seed(i)
                     start = np.random.randint(low=0, 
                                           high=len(wav) - max_len)
                     wav = wav[start: start + max_len]
@@ -55,9 +56,10 @@ class Dataset():
                 for i in indices:
                     filename = self.all_files[i]
                     wav, _ = librosa.load(data_dir + filename, sr=16000)
- #               start = np.random.randint(low=0, 
- #                                         high=len(wav) - max_len)
-                    start = 8126
+                    np.random.seed(i)
+                    start = np.random.randint(low=0, 
+                                         high=len(wav) - max_len)
+                    print(start)
                     wav = wav[start: start + max_len]
                     wav = np.reshape(wav, [max_len, 1])
                     speaker = self.split_func(filename)
