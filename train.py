@@ -146,10 +146,10 @@ for epoch in range (1,args.num_steps):
             sess.run(dataset.init)
             sess.run(testset.init)
     t = time.time()
-    laxis.append(mp1/dataset.total)
-    rclaxis.append(mp2/dataset.total)
-    cmlaxis.append(mp3/dataset.total)
-    vqlaxis.append(mp4/dataset.total)
+    laxis.append(mp1/int(dataset.total/args.batch_size))
+    rclaxis.append(mp2/int(dataset.total/args.batch_size))
+    cmlaxis.append(mp3/int(dataset.total/args.batch_size))
+    vqlaxis.append(mp4/int(dataset.total/args.batch_size))
 
     tl = 0.0
     trcl = 0.0
@@ -166,10 +166,10 @@ for epoch in range (1,args.num_steps):
         tcml += tmp3
         tvql += tmp4
     
-    tlaxis.append(tl/testset.total)
-    trclaxis.append(trcl/testset.total)
-    tcmlaxis.append(tcml/testset.total)
-    tvqlaxis.append(tvql/testset.total)
+    tlaxis.append(tl/int(testset.total/args.batch_size))
+    trclaxis.append(trcl/int(testset.total/args.batch_size))
+    tcmlaxis.append(tcml/int(testset.total/args.batch_size))
+    tvqlaxis.append(tvql/int(testset.total/args.batch_size))
     xaxis.append(epoch)
     plt.subplot(421)
     plt.title("loss")
