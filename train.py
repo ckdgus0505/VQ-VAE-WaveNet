@@ -122,8 +122,7 @@ for epoch in range (1,args.num_steps):
     mp2 = 0.0
     mp3 = 0.0
     mp4 = 0.0
-    for step in range(1, 2):
-#    for step in range(1, dataset.total):
+    for step in range(1, dataset.total/batch_size):
         try:
             t = time.time()
             _, rl, gs, lr, cml, vql, l = sess.run([model.train_op, 
@@ -160,8 +159,7 @@ for epoch in range (1,args.num_steps):
     tmp2 = 0.0
     tmp3 = 0.0
     tmp4 = 0.0
-    for i in range (0, 2):
-#    for i in range (0, testset.total):
+    for i in range (0, testset.total/batch_size):
         tmp1, tmp2, tmp3, tmp4 = sess.run([model.test_loss, model.test_reconstruction_loss, model.test_commitment_loss, model.test_vq_loss])
         tl += tmp1
         trcl += tmp2

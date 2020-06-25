@@ -59,7 +59,6 @@ class Dataset():
                     np.random.seed(i)
                     start = np.random.randint(low=0, 
                                          high=len(wav) - max_len)
-                    print(start)
                     wav = wav[start: start + max_len]
                     wav = np.reshape(wav, [max_len, 1])
                     speaker = self.split_func(filename)

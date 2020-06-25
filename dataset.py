@@ -54,7 +54,6 @@ class Dataset():
             while True:
                 np.random.shuffle(indices)
                 for i in indices:
-                    print(i)
                     filename = self.all_files[i]
                     wav, _ = librosa.load(data_dir + filename, sr=16000)
                     np.random.seed(i + np.random.randint(1))
