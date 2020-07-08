@@ -24,7 +24,7 @@ for subdir, dirs, files in os.walk(relative_path+file_path):
 
     for wav_file in files:
         tmp = subdir.split('/')[-1]
-        save_path = './data/VCTK_sliced'+tmp+'/'
+        save_path = './sliced_data/VCTK_Corpus/wav48/'+tmp+'/'
         print(save_path)
         os.makedirs(save_path, exist_ok=True)
         silence_slicer(subdir+'/'+wav_file, save_path+wav_file)
