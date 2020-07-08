@@ -15,7 +15,7 @@ def silence_slicer(path_in, path_out, format="wav"):
                 else:
                     non_sil_times_concat.append(t)
         non_sil_times = [t for t in non_sil_times_concat if t[1] - t[0] > 350]
-        sound[non_sil_times[0][0]: non_sil_times[-1][1]].export(path_out)
+        sound[non_sil_times[0][0]: non_sil_times[-1][1]].export(path_out, format='wav')
 
 
 relative_path = './data/'
