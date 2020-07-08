@@ -17,7 +17,7 @@ def silence_slicer(path_in, path_out, format="wav"):
         non_sil_times = [t for t in non_sil_times_concat if t[1] - t[0] > 350]
         sound[non_sil_times[0][0]: non_sil_times[-1][1]].export(path_out)
 
-relative_path = './data'
+relative_path = './data/'
 file_path = 'VCTK-Corpus/wav48/'
 
 for subdir, dirs, files in os.walk(relative_path+file_path):
